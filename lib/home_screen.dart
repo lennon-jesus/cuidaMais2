@@ -1,10 +1,11 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '/models/medic.dart';
 import '/models/profile.dart';
 import '/db/dbhelper.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:intl/intl.dart';
 import 'main.dart'; // para NotificationService e formatarDias
@@ -113,7 +114,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 );
                 if (confirmar == true) {
-                  Navigator.pop(context); // fecha o form
+                  Navigator.pop(context);
                 }
               },
               child: const Text("Cancelar"),
@@ -285,6 +286,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           }
                         },
                       ),
+                      if (timesError)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Text(
+                            "Pelo menos um horário deve ser registrado",
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
                     ],
                   ),
 
@@ -337,32 +346,32 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             actions: [
               TextButton(
-              onPressed: () async {
-                final confirmar = await showDialog<bool>(
-                  context: context,
-                  builder: (ctx) => AlertDialog(
-                    title: const Text("Cancelar edição"),
-                    content: const Text(
-                      "Tem certeza que deseja descartar as alterações?",
+                onPressed: () async {
+                  final confirmar = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: const Text("Cancelar edição"),
+                      content: const Text(
+                        "Tem certeza que deseja descartar as alterações?",
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: const Text("Não"),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, true),
+                          child: const Text("Sim"),
+                        ),
+                      ],
                     ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(ctx, false),
-                        child: const Text("Não"),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.pop(ctx, true),
-                        child: const Text("Sim"),
-                      ),
-                    ],
-                  ),
-                );
-                if (confirmar == true) {
-                  Navigator.pop(context); // fecha o form
-                }
-              },
-              child: const Text("Cancelar"),
-            ),
+                  );
+                  if (confirmar == true) {
+                    Navigator.pop(context); // fecha o form
+                  }
+                },
+                child: const Text("Cancelar"),
+              ),
               ElevatedButton(
                 onPressed: () async {
                   setStateSB(() {
@@ -453,7 +462,7 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(title: const Text("Meus Medicamentos"), centerTitle: true),
       body: Column(
         children: [
-          // --------------- CALENDÁRIO 15 DIAS ----------------
+          // --------------- CALENDÁRIO 10 DIAS ----------------
           SizedBox(
             height: 80,
             child: ListView.builder(
@@ -486,7 +495,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          DateFormat('E', 'pt_BR').format(weekDays[i]), // Seg, Ter, etc
+                          DateFormat(
+                            'E',
+                            'pt_BR',
+                          ).format(weekDays[i]), // Seg, Ter, etc
                           style: TextStyle(
                             color: isToday ? Colors.white : Colors.black,
                             fontWeight: FontWeight.bold,
@@ -558,7 +570,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: const Icon(Icons.person_add),
                 label: const Text("Criar Perfil"),
               ),
-              const SizedBox(width: 12), // espaçamento entre os botões
+              const SizedBox(width: 12), 
               if (activeProfile != null)
                 ElevatedButton.icon(
                   onPressed: () => deleteProfile(activeProfile!),
