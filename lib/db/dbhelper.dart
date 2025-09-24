@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/medic.dart';
+import '../models/profile.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -24,13 +25,23 @@ class DatabaseHelper {
       version: 1,
       onCreate: (db, version) async {
         await db.execute('''
-          CREATE TABLE medicine(
+          CREATE TABLE IF NOT EXISTS profiles(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL
+          )
+        ''');
+        await db.execute('''
+            CREATE TABLE medicine(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             medName TEXT,
             medDose TEXT,
             medTimes TEXT,
             imagePath TEXT,
-            observations TEXT
+            observations TEXT,
+            daysOfWeek TEXT,
+            maxDoses INTEGER DEFAULT 0,
+            takenDoses TEXT,
+            profileId INTEGER DEFAULT 0
           )
         ''');
       },
@@ -42,12 +53,15 @@ class DatabaseHelper {
     return await db.insert('medicine', medicine.toMap());
   }
 
-  Future<List<Medicine>> getMed() async {
-    final db = await database;
-    final maps = await db.query('medicine');
-    return maps.map((map) => Medicine.fromMap(map)).toList();
-  }
-
+  Future<List<Medicine>> getMedsByProfile(int profileId) async {
+  final db = await database;
+  final List<Map<String, dynamic>> maps = await db.query(
+    'medicine',
+    where: 'profileId = ?',
+    whereArgs: [profileId],
+  );
+  return List.generate(maps.length, (i) => Medicine.fromMap(maps[i]));
+}
   Future<int> updateMed(Medicine medicine) async {
     final db = await database;
     return await db.update(
@@ -61,5 +75,23 @@ class DatabaseHelper {
   Future<int> deleteMed(int id) async {
     final db = await database;
     return await db.delete('medicine', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<int> insertProfile(Profile profile) async {
+    final db = await database;
+    return await db.insert('profiles', profile.toMap());
+  }
+
+  // Buscar todos os perfis
+  Future<List<Profile>> getProfiles() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query('profiles');
+    return List.generate(maps.length, (i) => Profile.fromMap(maps[i]));
+  }
+
+  // Remover perfil com autenticação
+  Future<int> deleteProfile(int id) async {
+    final db = await database;
+    return await db.delete('profiles', where: 'id = ?', whereArgs: [id]);
   }
 }
