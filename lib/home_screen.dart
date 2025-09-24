@@ -70,13 +70,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void loadProfiles() async {
-  profiles = await _dbHelper.getProfiles();
-  if (profiles.isNotEmpty && activeProfile == null) {
-    activeProfile = profiles.first;
-    await _loadMed();
+    profiles = await _dbHelper.getProfiles();
+    if (profiles.isNotEmpty && activeProfile == null) {
+      activeProfile = profiles.first;
+      await _loadMed();
+    }
+    setState(() {});
   }
-  setState(() {});
-}
 
   void _showAddProfileDialog() {
     final TextEditingController controller = TextEditingController();
@@ -92,7 +92,30 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () async {
+                final confirmar = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text("Cancelar edição"),
+                    content: const Text(
+                      "Tem certeza que deseja descartar as alterações?",
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: const Text("Não"),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: const Text("Sim"),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirmar == true) {
+                  Navigator.pop(context); // fecha o form
+                }
+              },
               child: const Text("Cancelar"),
             ),
             ElevatedButton(
@@ -131,8 +154,8 @@ class _HomeScreenState extends State<HomeScreen> {
   /// ------------------ CALENDÁRIO: 7 DIAS ANTES + 7 DIAS DEPOIS ------------------
   List<DateTime> _getTwoWeeks() {
     DateTime today = DateTime.now();
-    DateTime start = today.subtract(const Duration(days: 7));
-    return List.generate(15, (i) => start.add(Duration(days: i)));
+    DateTime start = today.subtract(const Duration(days: 2));
+    return List.generate(10, (i) => start.add(Duration(days: i)));
   }
 
   /// ------------------ FORMULÁRIO DE MEDICAMENTO ------------------
@@ -314,9 +337,32 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("Cancelar"),
-              ),
+              onPressed: () async {
+                final confirmar = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text("Cancelar edição"),
+                    content: const Text(
+                      "Tem certeza que deseja descartar as alterações?",
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: const Text("Não"),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: const Text("Sim"),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirmar == true) {
+                  Navigator.pop(context); // fecha o form
+                }
+              },
+              child: const Text("Cancelar"),
+            ),
               ElevatedButton(
                 onPressed: () async {
                   setStateSB(() {
@@ -440,7 +486,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          DateFormat('E').format(weekDays[i]), // Seg, Ter, etc
+                          DateFormat('E', 'pt_BR').format(weekDays[i]), // Seg, Ter, etc
                           style: TextStyle(
                             color: isToday ? Colors.white : Colors.black,
                             fontWeight: FontWeight.bold,
@@ -585,13 +631,33 @@ class _HomeScreenState extends State<HomeScreen> {
                                     MainAxisAlignment.spaceEvenly,
                                 children: [
                                   ElevatedButton(
-                                    onPressed: () =>
-                                        _markDose(med, DateTime.now(), true),
+                                    onPressed: () async {
+                                      _markDose(med, DateTime.now(), true);
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            "Medicamento marcado como tomado.",
+                                          ),
+                                        ),
+                                      );
+                                    },
                                     child: const Text("Tomada"),
                                   ),
                                   ElevatedButton(
-                                    onPressed: () =>
-                                        _markDose(med, DateTime.now(), false),
+                                    onPressed: () async {
+                                      _markDose(med, DateTime.now(), false);
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            "Medicamento marcado como esquecido.",
+                                          ),
+                                        ),
+                                      );
+                                    },
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.red,
                                     ),
